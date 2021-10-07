@@ -149,9 +149,8 @@ contract VenusMarket {
         bool status;
     }
 
-    constructor (VenusController _addrc, uint256 _batchSize) public {
+    constructor (VenusController _addrc) public {
         addrc = _addrc;
-        batchSize = _batchSize;
     }
 
     // add Fixed investment
@@ -228,6 +227,10 @@ contract VenusMarket {
 
     function setFeeRate(uint256 _feeRate) onlyManager public {
         feeRate = _feeRate;
+    }
+
+    function setBatch(uint256 _batch) onlyManager public {
+        batchSize = _batch;
     }
 
     function setBlackUser(address _user, bool _canUse) onlyManager public {
