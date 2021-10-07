@@ -112,9 +112,9 @@ contract VenusMarket {
 
     uint256 public feeRate;
 
-    uint256 orderID = 10000;
+    uint256 public orderID = 10000;
     mapping(uint256 => order_S) public orders;
-    uint256[] orderList;
+    uint256[] public orderIndex;
     mapping(address => uint256) public userToOrder;
 
     event CreateOrder(uint256 _oid, address user, uint256 _price, address _receiveToken, uint256 _cycle, uint256 _endTime);
@@ -127,12 +127,13 @@ contract VenusMarket {
 
     // mix cycle, one day
     uint256 public minCycle = 86400;
+    uint256 public batchSize = 100;
 
     struct order_S {
         //user address
-        address user;
+        address owner;
         // order id
-        uint256 oid;
+        uint256 index;
         // price wei
         uint256 price;
         // coin type
@@ -144,10 +145,13 @@ contract VenusMarket {
         uint256 endTime;
         // Fixed investment cycle
         uint256 cycle;
+        // order status, true: useful, false: useless
+        bool status;
     }
 
-    constructor (VenusController _addrc) public {
+    constructor (VenusController _addrc, uint256 _batchSize) public {
         addrc = _addrc;
+        batchSize = _batchSize;
     }
 
     // add Fixed investment
@@ -158,18 +162,21 @@ contract VenusMarket {
         uint256 _endTime
     ) allowed public {
         require(userToOrder[msg.sender] != 0, "user already has order");
-        require(Address.isContract(_receiveToken), "not contract Addr");
+        require(Address.isContract(_receiveToken), "not a contract address");
+
         orderID++;
-        orderList.push(orderID);
         orders[orderID] = order_S({
-        user : msg.sender,
-        oid : orderID,
+        owner : msg.sender,
+        index : orderIndex.length,
         price : _price,
         reciveToken : _receiveToken,
         stepTime : block.timestamp,
         endTime : _endTime,
-        cycle : _cycle
+        cycle : _cycle,
+        status : true
         });
+        orderIndex.push(orderID);
+        userToOrder[msg.sender] = orderID;
 
         if (_cycle < minCycle) {
             minCycle = _cycle;
@@ -180,52 +187,43 @@ contract VenusMarket {
 
     // cancel Fixed investment
     function cancelOrder(uint256 _oid) allowed public {
-        deleteOrder(_oid);
-    }
+        require(orders[_oid].status, "order is not exist");
+        require(orders[_oid].owner == msg.sender, "order owner doesn't match");
 
-    function deleteOrder(uint256 _oid) internal {
-        require(_oid < orderID, "order id out of range");
-        require(userToOrder[msg.sender] != 0, "order is not exist");
-
-        // delete order id
-        uint256 latestIdx = orderList.length - 1;
-        userToOrder[msg.sender] = 0;
-        uint256 tmp = orderList[latestIdx];
-        orderList[latestIdx] = orderList[_oid];
-        orderList[_oid] = tmp;
-        orderList.pop();
-
+        orders[_oid].status = false;
+        delete userToOrder[msg.sender];
         emit CancelOrder(_oid);
     }
 
-    function trigTask() onlyManager public {
-        uint256 len = orderList.length;
-        for (uint256 i = 0; i < len; i++) {
-            order_S memory order = orders[orderList[i]];
-            // delete useless
-            if ((order.stepTime + order.cycle >= order.endTime)
-                || !canPay(order.user, order.reciveToken, order.price)) {
-                deleteOrder(order.oid);
+    // flag to mark order index witch payed successful.
+    uint256 public succIndex;
+
+    function trigTask(uint256 _start) onlyManager public {
+        if (_start >= orderIndex.length) {
+            return;
+        }
+        uint256 end = _start + batchSize;
+        if (orderIndex.length < end) {
+            end = orderIndex.length;
+        }
+        for (uint256 i = _start; i < end; i++) {
+            succIndex = i;
+            order_S storage order = orders[orderIndex[i]];
+            if (order.stepTime + order.cycle > order.endTime || order.stepTime > block.timestamp) {
+                order.status = false;
+                continue;
             }
             // try Fixed investment
             if (order.stepTime + order.cycle >= block.timestamp) {
-                // TODO Fixed investment operation
-                // salePay();
+                salePay(order.owner, order.reciveToken, order.price);
                 order.stepTime += order.cycle;
-                orders[orderList[i]] = order;
             }
         }
     }
 
-    function canPay(address _owner, address _receiveToken, uint256 _price) internal returns (bool){
-        // TODO check approved
-        // TODO check balance
-        return false;
-    }
-
-    // TODO fill content
-    function salePay() internal {
-
+    function salePay(address _owner, address _receiveToken, uint256 _price) internal {
+        // TODO fill content
+        return;
     }
 
     function setFeeRate(uint256 _feeRate) onlyManager public {
