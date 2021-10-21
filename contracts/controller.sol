@@ -1,6 +1,6 @@
 pragma solidity ^0.6.0;
 //SPDX-License-Identifier: UNLICENSED
-contract addressController {
+contract Controller {
     address public owner;
 
     mapping(string => address) public addrList;
