@@ -1,5 +1,7 @@
 pragma solidity ^0.6.0;
-//SPDX-License-Identifier: UNLICENSED
+
+import "./libraries/Address.sol";
+
 contract Controller {
     address public owner;
 
@@ -61,19 +63,5 @@ contract Controller {
     modifier onlyOwner(){
         require(msg.sender == owner, "not setter");
         _;
-    }
-}
-
-library Address {
-    function isContract(address account) internal view returns (bool) {
-        bytes32 codehash;
-        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {codehash := extcodehash(account)}
-        return (codehash != 0x0 && codehash != accountHash);
-    }
-
-    function toPayable(address account) internal pure returns (address payable) {
-        return address(uint160(account));
     }
 }
