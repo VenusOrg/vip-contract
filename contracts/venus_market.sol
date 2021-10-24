@@ -132,7 +132,7 @@ contract VenusMarket {
             0, // amountOutMin: we can skip computing this number because the math is tested
             path,
             order.owner,
-            block.timestamp + 3 * 60 * 60
+            block.timestamp + 60 // delay 60 seconds
         );
 
         return;
