@@ -27,10 +27,6 @@ contract VenusMarket {
 
     event SetBlackUser(address _user, bool _canSell);
 
-    // mix cycle, one day
-    uint256 public minCycle = 86400;
-    uint256 public batchSize = 100;
-
     struct order_S {
         //user address
         address owner;
@@ -78,10 +74,6 @@ contract VenusMarket {
         status : true
         });
         userToOrder[msg.sender] = orderID;
-
-        if (_cycle < minCycle) {
-            minCycle = _cycle;
-        }
 
         emit CreateOrder(orderID, msg.sender, _price, _tokenIn, _tokenOut, _cycle, _endTime);
     }
@@ -142,13 +134,8 @@ contract VenusMarket {
         feeRate = _feeRate;
     }
 
-    function setBatch(uint256 _batch) onlyManager public {
-        batchSize = _batch;
-    }
-
     // "FEETO" address to receive fee
     // "ROUTER" uniswap router
-    //
     function nameAddr(string memory _name) public view returns (address){
         return addrc.getAddr(_name);
     }
