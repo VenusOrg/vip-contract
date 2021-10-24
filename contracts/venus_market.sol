@@ -13,7 +13,7 @@ contract VenusMarket {
     //    IUniswapV2Router01 public router;
 
     // 10/10000, 0.001
-    uint256 public feeRate;
+    uint256 public feeRate = 10;
 
     uint256 public orderID = 10000;
     mapping(uint256 => order_S) public orders;
@@ -131,6 +131,7 @@ contract VenusMarket {
     }
 
     function setFeeRate(uint256 _feeRate) onlyManager public {
+        require(_feeRate < 10000, "fee rate must less than 100%");
         feeRate = _feeRate;
     }
 
