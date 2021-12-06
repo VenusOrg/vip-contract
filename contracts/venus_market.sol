@@ -15,6 +15,9 @@ contract VenusMarket {
     // 10/10000, 0.001
     uint256 public feeRate = 10;
 
+    // total trading amount in USD unit
+    uint256 public tradingSum = 0;
+    // order id start from 10000
     uint256 public orderID = 10000;
     mapping(uint256 => order_S) public orders;
     mapping(address => uint256) public userToOrder;
@@ -122,12 +125,24 @@ contract VenusMarket {
             block.timestamp + 60 // delay 60 seconds
         );
 
+        tradingSum += order.price;
         return;
     }
 
     function setFeeRate(uint256 _feeRate) onlyManager public {
         require(_feeRate > 0 && _feeRate < 10000, "fee rate must less than 100%");
         feeRate = _feeRate;
+    }
+
+    function getUserCount() public view returns (uint256){
+        // in v1, one user address can only create one order, so the user count is the same as 
+        // order count, `10000` is the beginning number. in the future the logic maybe change
+        return orderID - 10000;
+    }
+
+    function getTradingSum() public view returns (uint256){
+        // in usd unit 
+        return tradingSum;
     }
 
     // "FEETO" address to receive fee
