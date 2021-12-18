@@ -97,7 +97,7 @@ contract VenusMarket {
             // swap
             swapExactTokensForTokens(_oid);
             // update step time
-            order.stepTime += order.cycle * (block.timestamp - order.stepTime) / order.cycle;
+            order.stepTime += order.cycle * (block.timestamp - order.stepTime + order.cycle - 1) / order.cycle;
         }
     }
 
