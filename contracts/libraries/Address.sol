@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.7.5;
 
 library Address {
     function isContract(address account) internal view returns (bool) {
@@ -7,9 +7,5 @@ library Address {
         // solhint-disable-next-line no-inline-assembly
         assembly {codehash := extcodehash(account)}
         return (codehash != 0x0 && codehash != accountHash);
-    }
-
-    function toPayable(address account) internal pure returns (address payable) {
-        return address(uint160(account));
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity  >=0.7.5;
 
 interface VenusController {
     function isManager(address _mAddr) external view returns (bool);

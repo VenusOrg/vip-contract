@@ -1,6 +1,7 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.7.5;
 
 import './interfaces/IUniswapV2Router01.sol';
+import './interfaces/ISwapRouter.sol';
 import './interfaces/VenusController.sol';
 import './interfaces/IERC20.sol';
 import './libraries/Address.sol';
@@ -14,6 +15,8 @@ contract VenusMarket {
 
     // 10/10000, 0.001
     uint256 public feeRate = 10;
+    // router fee
+    uint24 fee = 3000;
 
     // total trading amount in USD unit
     uint256 public tradingSum = 0;
@@ -32,6 +35,8 @@ contract VenusMarket {
         address owner;
         // price wei
         uint256 price;
+        // Minimum
+        uint256 minimum;
 
         // tokenIn
         address tokenIn;
@@ -55,6 +60,7 @@ contract VenusMarket {
     // add Fixed investment
     function createOrder(
         uint256 _price,
+        uint256 _minimum,
         address _tokenIn,
         address _tokenOut,
         uint256 _cycle,
@@ -66,6 +72,7 @@ contract VenusMarket {
         orders[orderID] = order_S({
         owner : msg.sender,
         price : _price,
+        minimum : _minimum,
         tokenIn : _tokenIn,
         tokenOut : _tokenOut,
         stepTime : block.timestamp,
@@ -108,22 +115,22 @@ contract VenusMarket {
         order_S memory order = orders[_oid];
         uint256 feeAmount = order.price.mul(feeRate).div(10000);
         uint256 realAmount = order.price.sub(feeAmount);
-        address[] memory path = new address[](4);
-        path[0] = address(0);
-        path[1] = order.owner;
-        path[2] = order.tokenIn;
-        path[3] = order.tokenOut;
 
         // fee trans
         TransferHelper.safeTransferFrom(order.tokenIn, order.owner, _feeTo, feeAmount);
         // order trans
-        IUniswapV2Router01(nameAddr("ROUTER")).swapExactTokensForTokens(
-            realAmount,
-            0, // amountOutMin: we can skip computing this number because the math is tested
-            path,
-            order.owner,
-            block.timestamp + 60 // delay 60 seconds
-        );
+        ISwapRouter(nameAddr("ROUTER-V3")).exactInputSingle(
+            ISwapRouter.ExactInputSingleParams({
+        tokenIn : order.tokenIn,
+        tokenOut : order.tokenOut,
+        fee : fee,
+        sender : order.owner,
+        recipient : order.owner,
+        deadline : order.endTime,
+        amountIn : realAmount,
+        amountOutMinimum : order.minimum,
+        sqrtPriceLimitX96 : 0
+        }));
 
         tradingSum += order.price;
         return;
@@ -135,13 +142,13 @@ contract VenusMarket {
     }
 
     function getUserCount() public view returns (uint256){
-        // in v1, one user address can only create one order, so the user count is the same as 
+        // in v1, one user address can only create one order, so the user count is the same as
         // order count, `10000` is the beginning number. in the future the logic maybe change
         return orderID - 10000;
     }
 
     function getTradingSum() public view returns (uint256){
-        // in usd unit 
+        // in usd unit
         return tradingSum;
     }
 
@@ -149,6 +156,10 @@ contract VenusMarket {
     // "ROUTER" uniswap router
     function nameAddr(string memory _name) public view returns (address){
         return addrc.getAddr(_name);
+    }
+    // set uniswap v3 router fee
+    function setRouterFee(uint24 fee) onlyManager public {
+        fee = fee;
     }
 
     modifier onlyManager(){

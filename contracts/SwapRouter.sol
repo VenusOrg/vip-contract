@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity >=0.7.5;
 pragma abicoder v2;
 
 import '@uniswap/v3-core/contracts/libraries/SafeCast.sol';
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+import './interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/base/PeripheryImmutableState.sol';
 import '@uniswap/v3-periphery/contracts/base/PeripheryValidation.sol';
 import '@uniswap/v3-periphery/contracts/base/PeripheryPaymentsWithFee.sol';
@@ -123,7 +123,7 @@ contract SwapRouter is
             params.amountIn,
             params.recipient,
             params.sqrtPriceLimitX96,
-            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.fee, params.tokenOut), payer: msg.sender})
+            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.fee, params.tokenOut), payer: params.sender})
         );
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }

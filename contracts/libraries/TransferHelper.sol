@@ -2,7 +2,7 @@
  *Submitted for verification at hecoinfo.com on 2021-05-20
 */
 
-pragma solidity ^0.6.0;
+pragma solidity >=0.7.5;
 pragma experimental ABIEncoderV2;
 //SPDX-License-Identifier: UNLICENSED
 // helper methods for interacting with ERC20 tokens and sending ETH that do not consistently return true/false
