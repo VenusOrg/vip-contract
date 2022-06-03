@@ -7,6 +7,7 @@ import './interfaces/IERC20.sol';
 import './libraries/Address.sol';
 import './libraries/SafeMath.sol';
 import './libraries/TransferHelper.sol';
+pragma abicoder v2;
 
 contract VenusMarket {
     using Address for address;
